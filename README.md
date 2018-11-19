@@ -1,6 +1,6 @@
 # Testchain Generator
 
-This tools generates a synthetic blockchain using Bitcoin's regtest mode.
+This tools deterministically generates a synthetic blockchain using Bitcoin's regtest mode.
 It was written to add functional and regression tests to [BlockSci](https://github.com/citp/BlockSci).
 
 ## Install
@@ -17,12 +17,14 @@ If you are using this as a submodule for BlockSci, you can just run
 ```
 python3 generate_chain.py
 ```
+It will automatically update the `BlockSci/test/files/` directory with the new block and json files. 
 
-If you're using this as a standalone tool, you'll first need to modify the output directory for the block.dat files in `blockgen/runner.py`.
+If you're using this as a standalone tool, you'll first need to modify the output directory for the block.dat files in `blockgen/runner.py` to point to another directory.
 
-## Adding new transactions
+## Extending the blockchain
 
 New motifs can be created by adding a new class in `blockgen/motifs/` that inherits from `Generator`.
+Then, add this new class to `generate_chain.py`.
 The `Generator` class provides a number of utility functions, such as:
 
 - `next_address()`: returns a new `Address`
