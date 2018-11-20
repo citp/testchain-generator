@@ -1,4 +1,4 @@
-from blockgen.address import Address
+from testchain.address import Address
 
 
 def test_p2pkh_address(regtest):

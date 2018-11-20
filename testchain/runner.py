@@ -11,8 +11,8 @@ from typing import List, Type
 import bitcoin
 import bitcoin.rpc
 from bitcoin.core.key import use_libsecp256k1_for_signing
-from blockgen.generator import Generator
-from blockgen.address import COINBASE_KEY
+from testchain.generator import Generator
+from testchain.address import COINBASE_KEY
 
 LOG_LEVEL = logging.INFO
 bitcoin.SelectParams('regtest')

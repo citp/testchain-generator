@@ -1,5 +1,5 @@
-from blockgen.runner import Generator
-from blockgen.address import Address
+from testchain.runner import Generator
+from testchain.address import Address
 import random
 
 

@@ -1,4 +1,4 @@
-from blockgen.runner import Generator
+from testchain.runner import Generator
 
 
 class Addresses(Generator):

@@ -7,8 +7,8 @@ from bitcoin.core.script import CScript, CScriptWitness, OP_CHECKSIG, SignatureH
 from bitcoin.core.scripteval import VerifyScript, SCRIPT_VERIFY_P2SH
 from bitcoin.wallet import CBitcoinSecret
 
-from blockgen.address import Address, UnsupportedAddressTypeError, COINBASE_KEY, COINBASE_ADDRESS, UNSPENDABLE_ADDRESS
-from blockgen.util import Coin
+from testchain.address import Address, UnsupportedAddressTypeError, COINBASE_KEY, COINBASE_ADDRESS, UNSPENDABLE_ADDRESS
+from testchain.util import Coin
 
 
 class NoAddressError(Exception):

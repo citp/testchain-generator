@@ -2,8 +2,8 @@ from bitcoin.core import CBlock, CMutableTransaction, CMutableTxIn, CMutableTxOu
 from bitcoin.core.script import CScript, SignatureHash, SIGHASH_ALL, OP_RETURN, OP_0, OP_2, OP_3, OP_CHECKMULTISIG
 from bitcoin.core.scripteval import VerifyScript, SCRIPT_VERIFY_P2SH
 
-from blockgen.runner import Generator
-from blockgen.util import Coin
+from testchain.runner import Generator
+from testchain.util import Coin
 
 
 class SpecialCases(Generator):
