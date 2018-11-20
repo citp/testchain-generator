@@ -9,10 +9,23 @@ cache:
 addons:
   apt:
     packages:
-      - libsecp256k1-0
+      - build-essential
+      - automake
+      - pkg-config
+      - libtool
+      - libgmp-dev
+
+before_install:
+  - git clone https://github.com/bitcoin-core/secp256k1.git
 
 install:
   - pip install -r requirements.txt
+  - cd secp256k1
+  - ./autogen.sh
+  - ./configure
+  - make
+  - ./tests
+  - make install
 
 script:
   - python3 generate_chain.py --output-dir=.output
