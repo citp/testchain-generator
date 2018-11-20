@@ -19,7 +19,6 @@ install:
   - ./autogen.sh
   - ./configure
   - make -j 2
-  - ./tests
   - sudo make install
   - cd ..
   - LD_LIBRARY_PATH=/usr/local/lib
@@ -27,4 +26,4 @@ install:
 
 script:
   - python generate_chain.py --output-dir=.output
-  - cd test && pytest
+  - cd tests && pytest
