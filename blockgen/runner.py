@@ -23,12 +23,12 @@ use_libsecp256k1_for_signing(True)  # for deterministic coinbase transactions an
 class Runner(object):
     motif_generators: List[Generator]
 
-    def __init__(self, output_dir="../files/"):
+    def __init__(self, output_dir):
         self.current_time = 1535760000
         self.prev_block = None
         self.motif_generators = []
         self.kv = {}
-        self.output_dir = output_dir
+        self.output_dir = os.path.join(output_dir, '')
         self._setup_logger()
         self._setup_bitcoind()
         self.proxy = bitcoin.rpc.Proxy(btc_conf_file=self._conf_file())

@@ -1,3 +1,5 @@
+import argparse
+
 from blockgen.motifs.setup import SetupChain, FinalizeChain
 from blockgen.motifs.change import Change
 from blockgen.motifs.motifs import Motifs
@@ -7,7 +9,10 @@ from blockgen.motifs.taint import Taint
 from blockgen.motifs.heuristics import Heuristics
 from blockgen.runner import Runner
 
-generator = Runner()
+parser = argparse.ArgumentParser(description='Generate a synthetic blockchain.')
+parser.add_argument('--output-dir', dest='output_dir', default="../files/", help='Output directory')
+args = parser.parse_args()
+generator = Runner(args.output_dir)
 
 generator.add_generator(SetupChain)
 generator.add_generator(Addresses)
