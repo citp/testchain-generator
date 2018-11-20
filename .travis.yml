@@ -6,6 +6,11 @@ python:
 cache:
   - pip
 
+addons:
+  apt:
+    packages:
+      - libsecp256k1-0
+
 install:
   - pip install -r requirements.txt
 
