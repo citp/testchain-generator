@@ -1,4 +1,5 @@
 dist: xenial
+sudo: required
 language: python
 python:
   - "3.6"
@@ -25,7 +26,7 @@ install:
   - ./configure
   - make
   - ./tests
-  - make install
+  - sudo make install
 
 script:
   - python3 generate_chain.py --output-dir=.output
