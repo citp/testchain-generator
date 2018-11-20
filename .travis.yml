@@ -6,6 +6,8 @@ python:
   - "3.7"
 cache:
   - pip
+  directories:
+    - secp256k1
 
 addons:
   apt:
@@ -24,10 +26,11 @@ install:
   - cd secp256k1
   - ./autogen.sh
   - ./configure
-  - make
+  - make -j 2
   - ./tests
   - sudo make install
+  - cd ..
 
 script:
-  - python3 generate_chain.py --output-dir=.output
+  - python generate_chain.py --output-dir=.output
   - cd test && pytest
