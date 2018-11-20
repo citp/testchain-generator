@@ -9,20 +9,19 @@ cache:
 
 addons:
   apt:
-    sources:
-      - 'ppa:bitcoin/bitcoin'
     packages:
       - build-essential
       - automake
       - pkg-config
       - libtool
       - libgmp-dev
-      - bitcoind
 
 before_install:
   - git clone https://github.com/bitcoin-core/secp256k1.git
 
 install:
+  - sudo apt-add-repository ppa:bitcoin/bitcoin -y
+  - sudo apt-get install bitcoind -y
   - pip install -r requirements.txt
   - cd secp256k1
   - ./autogen.sh
