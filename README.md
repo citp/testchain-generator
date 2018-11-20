@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/citp/testchain-generator.svg?branch=master)](https://travis-ci.org/citp/testchain-generator)
+
 # Testchain Generator
 
 This tools deterministically generates a synthetic blockchain using Bitcoin's regtest mode.
