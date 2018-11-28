@@ -3,7 +3,8 @@ from testchain.generator import Generator
 
 class BitcoinCash(Generator):
     def run(self):
-        self.create_block_with_dependencies(20)
+        if self.chain == "bch":
+            self.create_block_with_dependencies(20)
 
     def create_block_with_dependencies(self, length: int):
         """
@@ -18,5 +19,6 @@ class BitcoinCash(Generator):
 
             txid = self.create_transaction([source], [destination])
             self.log_value("tx-chain-{}-tx-{}".format(length, i), txid)
-        block_hash = self.generate_block()
-        self.log_value("bitcoin-cash-test-block", block_hash[0])
+        self.generate_block()
+        self.log_value("bitcoin-cash-test-block", self.proxy.getblockcount())
+        self.log_value("bitcoin-cash-test-block-tx-count", length)
