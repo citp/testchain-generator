@@ -32,5 +32,6 @@ class Addresses(Generator):
     def run(self):
         self.create_address("p2pkh")
         self.create_address("p2sh")
-        self.create_address("p2wpkh")
-        self.create_address("p2wsh")
+        if self.segwit:
+            self.create_address("p2wpkh")
+            self.create_address("p2wsh")

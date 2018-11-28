@@ -1,6 +1,6 @@
 from bitcoin.core import CBlock, CMutableTransaction, CMutableTxIn, CMutableTxOut, COutPoint, COIN, lx, x
-from bitcoin.core.script import CScript, SignatureHash, SIGHASH_ALL, OP_RETURN, OP_0, OP_2, OP_3, OP_CHECKMULTISIG
-from bitcoin.core.scripteval import VerifyScript, SCRIPT_VERIFY_P2SH
+from bitcoin.core.script import CScript, SignatureHash, SIGHASH_ALL, OP_RETURN, OP_0, OP_2, OP_3, OP_CHECKMULTISIG, \
+    SIGVERSION_WITNESS_V0
 
 from testchain.runner import Generator
 from testchain.util import Coin
@@ -22,7 +22,7 @@ class SpecialCases(Generator):
 
         prev_block_hash = self.proxy.getblockhash(self.proxy.getblockcount())
 
-        ts = self.next_timestamp()
+        ts = self._next_timestamp()
         self.proxy.call("setmocktime", ts)
 
         for nonce in range(1000):
@@ -60,11 +60,9 @@ class SpecialCases(Generator):
 
         key = source.key
         script = source.address.to_scriptPubKey()
-        sighash = SignatureHash(script, tx, 0, SIGHASH_ALL)
-        sig = key.sign(sighash) + bytes([SIGHASH_ALL])
 
+        sig = self._sign(script, tx, 0, Coin(source.value).satoshi(), key)
         tx_ins[0].scriptSig = CScript([sig, key.pub])
-        VerifyScript(tx_ins[0].scriptSig, script, tx, 0, (SCRIPT_VERIFY_P2SH,))
 
         txid = self._send_transaction(tx, [])
         self.log_value("op-return-tx", txid)
@@ -86,10 +84,9 @@ class SpecialCases(Generator):
         # sign and submit
         key = source.key
         script = source.address.to_scriptPubKey()
-        sighash = SignatureHash(script, tx, 0, SIGHASH_ALL)
-        sig = key.sign(sighash) + bytes([SIGHASH_ALL])
+
+        sig = self._sign(script, tx, 0, Coin(source.value).satoshi(), key)
         tx_ins[0].scriptSig = CScript([sig, key.pub])
-        VerifyScript(tx_ins[0].scriptSig, script, tx, 0, (SCRIPT_VERIFY_P2SH,))
 
         txid = self._send_transaction(tx, [])
         self.log_value("raw-multisig-tx", txid)
@@ -101,12 +98,10 @@ class SpecialCases(Generator):
         tx = CMutableTransaction(tx_ins, tx_outs)
 
         # Sign with 2 out of three keys
-        sighash = SignatureHash(redeem_script, tx, 0, SIGHASH_ALL)
-        sig1 = keys[0].sign(sighash) + bytes([SIGHASH_ALL])
-        sig3 = keys[2].sign(sighash) + bytes([SIGHASH_ALL])
+        sig1 = self._sign(redeem_script, tx, 0, Coin(0.1 - self.fee).satoshi(), keys[0])
+        sig3 = self._sign(redeem_script, tx, 0, Coin(0.1 - self.fee).satoshi(), keys[2])
 
         tx_ins[0].scriptSig = CScript([OP_0, sig1, sig3])
-        VerifyScript(tx_ins[0].scriptSig, redeem_script, tx, 0, (SCRIPT_VERIFY_P2SH,))
 
         txid = self._send_transaction(tx, [])
         self.log_value("raw-multisig-redeem-tx", txid)
@@ -129,10 +124,8 @@ class SpecialCases(Generator):
         # sign and submit
         key = source.key
         script = source.address.to_scriptPubKey()
-        sighash = SignatureHash(script, tx, 0, SIGHASH_ALL)
-        sig = key.sign(sighash) + bytes([SIGHASH_ALL])
+        sig = self._sign(script, tx, 0, Coin(source.value).satoshi(), key)
         tx_ins[0].scriptSig = CScript([sig, key.pub])
-        VerifyScript(tx_ins[0].scriptSig, script, tx, 0, (SCRIPT_VERIFY_P2SH,))
 
         txid = self._send_transaction(tx, [])
         self.log_value("p2sh-multisig-tx", txid)
@@ -144,12 +137,10 @@ class SpecialCases(Generator):
         tx = CMutableTransaction(tx_ins, tx_outs)
 
         # Sign with 2 out of three keys
-        sighash = SignatureHash(redeem_script, tx, 0, SIGHASH_ALL)
-        sig1 = keys[0].sign(sighash) + bytes([SIGHASH_ALL])
-        sig3 = keys[2].sign(sighash) + bytes([SIGHASH_ALL])
+        sig1 = self._sign(redeem_script, tx, 0, Coin(0.1 - self.fee).satoshi(), keys[0], "p2sh")
+        sig3 = self._sign(redeem_script, tx, 0, Coin(0.1 - self.fee).satoshi(), keys[2], "p2sh")
 
         tx_ins[0].scriptSig = CScript([OP_0, sig1, sig3, redeem_script])
-        VerifyScript(tx_ins[0].scriptSig, redeem_script.to_p2sh_scriptPubKey(), tx, 0, (SCRIPT_VERIFY_P2SH,))
 
         txid = self._send_transaction(tx, [])
         self.log_value("p2sh-multisig-redeem-tx", txid)

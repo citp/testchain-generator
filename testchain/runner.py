@@ -23,7 +23,9 @@ use_libsecp256k1_for_signing(True)  # for deterministic coinbase transactions an
 class Runner(object):
     motif_generators: List[Generator]
 
-    def __init__(self, output_dir):
+    def __init__(self, output_dir, chain, exec):
+        self.chain = chain
+        self.exec = exec
         self.current_time = 1535760000
         self.prev_block = None
         self.motif_generators = []
@@ -46,12 +48,19 @@ class Runner(object):
     def _setup_bitcoind(self):
         self.tempdir = tempfile.TemporaryDirectory()
         self.log.info("bitcoind datadir: {}".format(self.tempdir.name))
+
         # copy conf file to temp dir
         shutil.copy("bitcoin.conf", self.tempdir.name)
+
         # launch bitcoind
-        self.proc = subprocess.Popen(
-            ["bitcoind", "-datadir={}".format(self.tempdir.name), "-mocktime={}".format(self.current_time)],
-            stdout=subprocess.DEVNULL)
+        params = [self.exec, "-rpcport=18443", "-datadir={}".format(self.tempdir.name),
+                  "-mocktime={}".format(self.current_time)]
+
+        # disable Bitcoin Cash specific address format (breaks Python library)
+        if self.chain == "bch":
+            params += ["-usecashaddr=0"]
+        self.proc = subprocess.Popen(params, stdout=subprocess.DEVNULL)
+
         # kill process when generator is done
         atexit.register(self._terminate)
 
@@ -100,8 +109,8 @@ class Runner(object):
         :param truncate_file: Whether the final block file should be truncated. Works with BlockSci, but may not work
         when using other parsers.
         """
-        blk_destination = self.output_dir + "regtest/blocks/"
-        self.log.info("Copying blk00000.dat from temp directory")
+        blk_destination = self.output_dir + self.chain + "/regtest/blocks/"
+        self.log.info("Copying blk00000.dat to {}".format(blk_destination))
         if not os.path.exists(blk_destination):
             os.makedirs(blk_destination)
         source = "{}/regtest/blocks/blk00000.dat".format(self.tempdir.name)
@@ -132,13 +141,15 @@ class Runner(object):
 
         self.log.info("Writing hashes to file output.json")
         self.log.debug(self.kv)
-        if not os.path.exists(self.output_dir):
-            os.mkdir(self.output_dir)
-        with open(self.output_dir + "output.json", "w") as f:
+        dest_dir = self.output_dir + self.chain + "/"
+        if not os.path.exists(dest_dir):
+            os.mkdir(dest_dir)
+        with open(dest_dir + "output.json", "w") as f:
             json.dump(self.kv, f, indent=4)
 
     def add_generator(self, generator: Type[Generator]):
-        gen = generator(self.proxy, self.log, self.kv, (len(self.motif_generators) + 1) * 10000, self.next_timestamp)
+        gen = generator(self.proxy, self.chain, self.log, self.kv, (len(self.motif_generators) + 1) * 10000,
+                        self.next_timestamp)
         self.log.debug("Magic No: {}".format(gen.offset))
         self.motif_generators.append(gen)
 

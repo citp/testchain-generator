@@ -1,4 +1,5 @@
-from testchain.address import Address
+import pytest
+from testchain.address import Address, UnsupportedAddressTypeError
 
 
 def test_p2pkh_address(regtest):
@@ -35,6 +36,11 @@ def test_p2wsh_address(regtest):
     assert 0 == addr.value
 
     address_regression(addr, regtest)
+
+
+def test_invalid_address():
+    with pytest.raises(UnsupportedAddressTypeError):
+        Address.from_key_index(4, address_type="invalid")
 
 
 def address_regression(addr, regtest):

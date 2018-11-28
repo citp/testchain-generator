@@ -11,6 +11,10 @@ before_install:
   - git clone https://github.com/bitcoin-core/secp256k1.git
   - sudo apt-add-repository ppa:bitcoin/bitcoin -y
   - sudo apt-get update
+  - mkdir bin
+  - wget https://download.bitcoinabc.org/0.18.5/linux/bitcoin-abc-0.18.5-x86_64-linux-gnu.tar.gz
+  - tar -xzvf bitcoin-abc-0.18.5-x86_64-linux-gnu.tar.gz
+  - mv ./bitcoin-abc-0.18.5-x86_64-linux-gnu/bitcoind ./bin/bitcoin-cash
 
 install:
   - sudo apt-get install build-essential automake pkg-config libtool libgmp-dev bitcoind -y
@@ -25,5 +29,7 @@ install:
   - export LD_LIBRARY_PATH
 
 script:
-  - python generate_chain.py --output-dir=.output
+  - python generate_chain.py --output-dir=.output --chain=btc
+  - python generate_chain.py --output-dir=.output --chain=bch --exec=./bin/bitcoin-cash
   - cd tests && pytest
+

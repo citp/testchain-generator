@@ -4,7 +4,6 @@ from logging import Logger
 import bitcoin.rpc
 from bitcoin.core import CMutableTxIn, CMutableTxOut, CMutableTransaction, COutPoint, CTxInWitness, CTxWitness, b2lx
 from bitcoin.core.script import CScript, CScriptWitness, OP_CHECKSIG, SignatureHash, SIGHASH_ALL, SIGVERSION_WITNESS_V0
-from bitcoin.core.scripteval import VerifyScript, SCRIPT_VERIFY_P2SH
 from bitcoin.wallet import CBitcoinSecret
 
 from testchain.address import Address, UnsupportedAddressTypeError, COINBASE_KEY, COINBASE_ADDRESS, UNSPENDABLE_ADDRESS
@@ -21,17 +20,18 @@ class Generator(object):
     def run(self):
         raise NotImplementedError
 
-    def __init__(self, proxy: bitcoin.rpc.Proxy, log: Logger, stored_hashes: Dict, offset: int,
+    def __init__(self, proxy: bitcoin.rpc.Proxy, chain, log: Logger, stored_hashes: Dict, offset: int,
                  next_timestamp: Callable[[], int]):
         self.proxy = proxy
+        self.chain = chain
         self.log = log
-
         self.addresses = []
         self.offset = offset
         self.address_cursor = -1
         self.stored_hashes = stored_hashes
         self.fee = 0.0001
-        self.next_timestamp = next_timestamp
+        self._next_timestamp = next_timestamp
+        self.segwit = self.chain == "btc"
 
     def log_value(self, k, v):
         self.stored_hashes[k] = v
@@ -43,10 +43,16 @@ class Generator(object):
         """
         return 50 if self.proxy.getblockcount() < 150 else 25
 
-    def generate_block(self, n: int = 1, spendable_coinbase=True):
-        timestamp = self.next_timestamp()
+    def _advance_time(self):
+        """
+        Advance time by increasing the mocktime of the Bitcoin node
+        """
+        timestamp = self._next_timestamp()
         self.proxy.call("setmocktime", timestamp)
         self.log.debug("Set time to {}".format(timestamp))
+
+    def generate_block(self, n: int = 1, spendable_coinbase=True):
+        self._advance_time()
 
         if spendable_coinbase:
             address = COINBASE_ADDRESS
@@ -82,23 +88,24 @@ class Generator(object):
 
         unspents = self.proxy.listunspent(minconf=100, addrs=[coinbase_addr.address])
         unspents.sort(key=lambda x: x['confirmations'], reverse=True)
-        oldest_utxo = unspents[0]
+        oldest_utxo = next(x for x in unspents if Coin.from_satoshi(x['amount']).bitcoin() >= value + self.fee)
 
         coinbase_addr.txid = oldest_utxo['outpoint'].hash
         coinbase_addr.vout = oldest_utxo['outpoint'].n
 
-        coinbase_addr.value = Coin.from_satoshi(oldest_utxo['amount']).bitcoin() - value - self.fee
+        coinbase_addr.value = Coin.from_satoshi(oldest_utxo['amount']).bitcoin()
         address.value = value
 
         # change address is always the second output
-        txid = self.create_transaction([coinbase_addr], [address, coinbase_addr])
+        txid = self.create_transaction([coinbase_addr], [address, coinbase_addr],
+                                       values=[value, coinbase_addr.value - self.fee - value])
 
         self.log.debug("Address: {}".format(address.address))
         self.log.debug("Tx: {}".format(txid))
 
         return txid, address.vout
 
-    def create_transaction(self, sources: List[Address], recipients: List[Address], n_locktime=0,
+    def create_transaction(self, sources: List[Address], recipients: List[Address], values=[], n_locktime=0,
                            n_sequence=0xffffffff):
         """
         Creates a transaction using `sources` as inputs and `recipients` as outputs.
@@ -108,18 +115,23 @@ class Generator(object):
         :param n_sequence: sequence no for inputs
         :return: the TXID of the transaction as returned by the proxy
         """
-        tx = self._create_transaction(sources, recipients, n_locktime=n_locktime, n_sequence=n_sequence)
+        tx = self._create_transaction(sources, recipients, values, n_locktime=n_locktime, n_sequence=n_sequence)
         return self._send_transaction(tx, recipients)
 
-    def _create_transaction(self, sources: List[Address], recipients: List[Address], n_locktime, n_sequence):
+    def _create_transaction(self, sources: List[Address], recipients: List[Address], values, n_locktime, n_sequence):
+        if not values:
+            values = [recipient.value for recipient in recipients]
         tx_ins = [CMutableTxIn(COutPoint(source.txid, source.vout), nSequence=n_sequence) for source in sources]
         tx_outs = []
 
-        for cnt, recipient in enumerate(recipients):
+        cnt = 0
+        for recipient, value in zip(recipients, values):
             if recipient.value == 0:
                 self.log.warning("Creating output with 0 BTC")
             recipient.vout = cnt
-            tx_outs.append(CMutableTxOut(Coin(recipient.value).satoshi(), recipient.address.to_scriptPubKey()))
+
+            tx_outs.append(CMutableTxOut(Coin(value).satoshi(), recipient.address.to_scriptPubKey()))
+            cnt += 1
 
         tx = CMutableTransaction(tx_ins, tx_outs, nLockTime=n_locktime)
 
@@ -140,22 +152,15 @@ class Generator(object):
                 raise UnsupportedAddressTypeError()
 
             # Create signature
-            if source.type == 'p2wpkh' or source.type == 'p2wsh':
-                amount = Coin(source.value).satoshi()
-                sighash = SignatureHash(script, tx, in_idx, SIGHASH_ALL, amount=amount,
-                                        sigversion=SIGVERSION_WITNESS_V0)
-            else:
-                sighash = SignatureHash(script, tx, in_idx, SIGHASH_ALL)
-            sig = key.sign(sighash) + bytes([SIGHASH_ALL])
+            amount = Coin(source.value).satoshi()
+            sig = self._sign(script, tx, in_idx, amount, key, source.type)
 
             # Add signature to input or witness
             if source.type == 'p2pkh':
                 txin.scriptSig = CScript([sig, key.pub])
-                VerifyScript(txin.scriptSig, script, tx, in_idx, (SCRIPT_VERIFY_P2SH,))
                 witnesses.append(CTxInWitness())
             elif source.type == 'p2sh':
                 txin.scriptSig = CScript([sig, script])
-                VerifyScript(txin.scriptSig, script.to_p2sh_scriptPubKey(), tx, in_idx, (SCRIPT_VERIFY_P2SH,))
                 witnesses.append(CTxInWitness())
             elif source.type == 'p2wpkh':
                 txin.scriptSig = CScript()
@@ -173,3 +178,17 @@ class Generator(object):
         for rec in recipients:
             rec.txid = txid
         return b2lx(txid)
+
+    def _sign(self, script, tx, in_idx, amount, key, script_type="p2pkh"):
+        if self.chain == "bch":
+            sighash = SignatureHash(script, tx, in_idx, SIGHASH_ALL | 0x40, amount=amount,
+                                    sigversion=SIGVERSION_WITNESS_V0)
+            sig = key.sign(sighash) + bytes([SIGHASH_ALL | 0x40])
+        else:
+            if script_type == 'p2wpkh' or script_type == 'p2wsh':
+                sighash = SignatureHash(script, tx, in_idx, SIGHASH_ALL, amount=amount,
+                                        sigversion=SIGVERSION_WITNESS_V0)
+            else:
+                sighash = SignatureHash(script, tx, in_idx, SIGHASH_ALL)
+            sig = key.sign(sighash) + bytes([SIGHASH_ALL])
+        return sig

@@ -116,10 +116,9 @@ class Change(Generator):
             spend2 = self.next_address()
             spend2.value = 1
 
-            change.value = 1
             dest = [spend1, spend2]
             dest.insert(pos, change)
-            txid = self.create_transaction([change], dest)
+            txid = self.create_transaction([change], dest, values=[1, 1, 1])
 
             self.log_value("change-reuse-tx-{}".format(pos), txid)
             self.log_value("change-reuse-position-{}".format(pos), pos)
@@ -138,10 +137,9 @@ class Change(Generator):
             self.fund_address(spend2, 1)
             spend2.value = 1
 
-            change.value = 1
             dest = [spend1, spend2]
             dest.insert(pos, change)
-            txid = self.create_transaction([change], dest)
+            txid = self.create_transaction([change], dest, values=[1, 1, 1])
 
             self.log_value("change-client-behavior-tx-{}".format(pos), txid)
             self.log_value("change-client-behavior-position-{}".format(pos), pos)
