@@ -24,7 +24,8 @@ generator.add_generator(Change)
 generator.add_generator(SpecialCases)
 generator.add_generator(Taint)
 generator.add_generator(Heuristics)
-generator.add_generator(FinalizeChain)
 generator.add_generator(BitcoinCash)
+generator.add_generator(FinalizeChain)
+
 
 generator.run()

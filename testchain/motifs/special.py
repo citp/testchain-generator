@@ -1,6 +1,5 @@
 from bitcoin.core import CBlock, CMutableTransaction, CMutableTxIn, CMutableTxOut, COutPoint, COIN, lx, x
-from bitcoin.core.script import CScript, SignatureHash, SIGHASH_ALL, OP_RETURN, OP_0, OP_2, OP_3, OP_CHECKMULTISIG, \
-    SIGVERSION_WITNESS_V0
+from bitcoin.core.script import CScript, OP_RETURN, OP_0, OP_2, OP_3, OP_CHECKMULTISIG
 
 from testchain.runner import Generator
 from testchain.util import Coin

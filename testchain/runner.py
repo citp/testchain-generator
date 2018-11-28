@@ -56,9 +56,10 @@ class Runner(object):
         params = [self.exec, "-rpcport=18443", "-datadir={}".format(self.tempdir.name),
                   "-mocktime={}".format(self.current_time)]
 
-        # disable Bitcoin Cash specific address format (breaks Python library)
+        # Disable Bitcoin Cash specific address format (breaks Python library)
+        # Enable CTOR
         if self.chain == "bch":
-            params += ["-usecashaddr=0"]
+            params += ["-usecashaddr=0", "-magneticanomalyactivationtime=0"]
         self.proc = subprocess.Popen(params, stdout=subprocess.DEVNULL)
 
         # kill process when generator is done

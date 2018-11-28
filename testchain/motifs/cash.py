@@ -18,5 +18,5 @@ class BitcoinCash(Generator):
 
             txid = self.create_transaction([source], [destination])
             self.log_value("tx-chain-{}-tx-{}".format(length, i), txid)
-        self.generate_block()
-        self.log_value("bitcoin-cash-test-block", self.proxy.getblockcount())
+        block_hash = self.generate_block()
+        self.log_value("bitcoin-cash-test-block", block_hash[0])
