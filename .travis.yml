@@ -14,7 +14,7 @@ before_install:
   - mkdir bin
   - wget https://download.bitcoinabc.org/0.18.5/linux/bitcoin-abc-0.18.5-x86_64-linux-gnu.tar.gz
   - tar -xzvf bitcoin-abc-0.18.5-x86_64-linux-gnu.tar.gz
-  - mv ./bitcoin-abc-0.18.5-x86_64-linux-gnu/bin/bitcoind ./bin/bitcoin-cash
+  - mv ./bitcoin-abc-0.18.5/bin/bitcoind ./bin/bitcoin-cash
 
 install:
   - sudo apt-get install build-essential automake pkg-config libtool libgmp-dev bitcoind -y
