@@ -16,15 +16,26 @@ It was written to provide a lean blockchain to run functional and regression aga
 
 ## Running
 
-If you are using this as a submodule for BlockSci, you can just run
+The `generate_chain.py` script takes three arguments:
+
+- `--output-dir=` specifies where the output should be stored (default: `../files/`)
+- `--chain=` specifies whether a Bitcoin or a Bitcoin Cash chain should be generated (options: `btc` or `bch`, default: `btc`)
+- `--exec=` expects a path to the node daemon (default: `bitcoind`)
+
+If you are using this as a submodule for BlockSci and want to update the Bitcoin (BTC) chain, you would run
 ```
 python3 generate_chain.py
 ```
-It will automatically update the `BlockSci/test/files/` directory with the new block and json files. 
+It will automatically update the `BlockSci/test/files/btc/` directory with the new block and json files. 
 
-If you're using this as a standalone tool, you'll probably want to change the output directory for the generated files
+To update the Bitcoin Cash output, you'll need to select `bch` and provide a path to the Bitcoin ABC daemon executable.
 ```
-python3 generate_chain.py --output-dir=output
+python3 generate_chain.py --chain=bch --exec=<path/to/bitcoincashdaemon>
+```
+
+If you're using this as a standalone tool, you'll probably want to change the output directory for the generated files, e.g.
+```
+python3 generate_chain.py --output-dir=.output
 ```
 
 ## Extending the blockchain
