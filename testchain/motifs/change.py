@@ -125,6 +125,7 @@ class Change(Generator):
             self.generate_block()
 
     def create_client_behavior_change(self):
+        # this does NOT implement the typical client behavior
         for pos in range(3):
             change = self.next_address()
             self.fund_address(change, 3 + self.fee)
@@ -139,10 +140,8 @@ class Change(Generator):
 
             dest = [spend1, spend2]
             dest.insert(pos, change)
-            txid = self.create_transaction([change], dest, values=[1, 1, 1])
+            self.create_transaction([change], dest, values=[1, 1, 1])
 
-            self.log_value("change-client-behavior-tx-{}".format(pos), txid)
-            self.log_value("change-client-behavior-position-{}".format(pos), pos)
             self.generate_block()
 
     def run(self):

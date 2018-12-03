@@ -49,3 +49,4 @@ The `Generator` class provides a number of utility functions, such as:
 - `fund_address(addr, value)`: sends `value` BTC to the address `addr`
 - `create_transaction([sources], [recipients])`: creates a new transaction using a list of addresses as inputs (`[sources]`) and another list of addresses as outputs (`[recipients]`)
 - `generate_block()`: creates a new block that includes all transactions created since it was last called
+
