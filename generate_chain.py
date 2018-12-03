@@ -1,6 +1,6 @@
 import argparse
 
-from testchain.motifs.setup import SetupChain, FinalizeChain
+from testchain.motifs.general import SetupChain, FinalizeChain
 from testchain.motifs.change import Change
 from testchain.motifs.motifs import Motifs
 from testchain.motifs.addresses import Addresses
