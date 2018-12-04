@@ -105,12 +105,13 @@ class Generator(object):
 
         return txid, address.vout
 
-    def create_transaction(self, sources: List[Address], recipients: List[Address], values=[], n_locktime=0,
+    def create_transaction(self, sources: List[Address], recipients: List[Address], values=None, n_locktime=0,
                            n_sequence=0xffffffff):
         """
         Creates a transaction using `sources` as inputs and `recipients` as outputs.
         :param sources: list of addresses to spend from
         :param recipients: list of addresses to send to
+        :param values: optional list of spend values
         :param n_locktime: locktime value of the transaction
         :param n_sequence: sequence no for inputs
         :return: the TXID of the transaction as returned by the proxy
@@ -126,7 +127,7 @@ class Generator(object):
 
         cnt = 0
         for recipient, value in zip(recipients, values):
-            if recipient.value == 0:
+            if value == 0:
                 self.log.warning("Creating output with 0 BTC")
             recipient.vout = cnt
 

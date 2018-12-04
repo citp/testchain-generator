@@ -125,24 +125,35 @@ class Change(Generator):
             self.generate_block()
 
     def create_client_behavior_change(self):
-        # this does NOT implement the typical client behavior
         for pos in range(3):
-            change = self.next_address()
-            self.fund_address(change, 3 + self.fee)
+            start = self.next_address()
+            self.fund_address(start, 3 + self.fee)
 
             spend1 = self.next_address()
             self.fund_address(spend1, 1)
-            spend1.value = 1
 
             spend2 = self.next_address()
             self.fund_address(spend2, 1)
-            spend2.value = 1
+            self.generate_block()
 
+            change = self.next_address()
             dest = [spend1, spend2]
             dest.insert(pos, change)
-            self.create_transaction([change], dest, values=[1, 1, 1])
+            txid = self.create_transaction([start], dest, values=[1, 1, 1])
+            self.log_value("change-client-behavior-tx-{}".format(pos), txid)
+            self.log_value("change-client-behavior-position-{}".format(pos), pos)
 
             self.generate_block()
+
+    def create_negative_testcase(self):
+        sources = [self.next_address() for _ in range(3)]
+        for s in sources:
+            self.fund_address(s, 1 + self.fee)
+
+        destinations = [self.next_address() for _ in range(3)]
+        txid = self.create_transaction(sources, destinations, values=[1.488888, 1.511112])
+        self.log_value("change-negative-testcase-tx", txid)
+        self.generate_block()
 
     def run(self):
         self.create_power_of_ten_change()
@@ -151,3 +162,4 @@ class Change(Generator):
         self.create_locktime_change()
         self.create_address_reuse_change()
         self.create_client_behavior_change()
+        self.create_negative_testcase()
