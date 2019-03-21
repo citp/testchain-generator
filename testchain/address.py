@@ -1,8 +1,8 @@
 import hashlib
 
-from bitcoin.core import Hash160
-from bitcoin.core.script import CScript, OP_CHECKSIG, OP_0
-from bitcoin.wallet import CBitcoinSecret, P2PKHBitcoinAddress, P2SHBitcoinAddress, P2WSHBitcoinAddress, \
+from bitcointx.core import Hash160
+from bitcointx.core.script import CScript, OP_CHECKSIG, OP_0
+from bitcointx.wallet import CBitcoinSecret, P2PKHBitcoinAddress, P2SHBitcoinAddress, P2WSHBitcoinAddress, \
     P2WPKHBitcoinAddress
 
 COINBASE_ADDRESS = "mjTkW3DjgyZck4KbiRusZsqTgaYTxdSz6z"

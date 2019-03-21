@@ -8,24 +8,21 @@ import tempfile
 from time import sleep
 from typing import List, Type
 
-import bitcoin
-import bitcoin.rpc
-from bitcoin.core.key import use_libsecp256k1_for_signing
+import bitcointx
+import bitcointx.rpc
 from testchain.generator import Generator
 from testchain.address import COINBASE_KEY
 
 LOG_LEVEL = logging.INFO
-bitcoin.SelectParams('regtest')
-
-use_libsecp256k1_for_signing(True)  # for deterministic coinbase transactions and signatures
+bitcointx.SelectParams('regtest')
 
 
 class Runner(object):
     motif_generators: List[Generator]
 
-    def __init__(self, output_dir, chain, exec):
+    def __init__(self, output_dir, chain, executable):
         self.chain = chain
-        self.exec = exec
+        self.exec = executable
         self.current_time = 1535760000
         self.prev_block = None
         self.motif_generators = []
@@ -33,7 +30,7 @@ class Runner(object):
         self.output_dir = os.path.join(output_dir, '')
         self._setup_logger()
         self._setup_bitcoind()
-        self.proxy = bitcoin.rpc.Proxy(btc_conf_file=self._conf_file())
+        self.proxy = bitcointx.rpc.Proxy(btc_conf_file=self._conf_file())
         self.proxy.call("importprivkey", COINBASE_KEY)
 
     def _setup_logger(self):

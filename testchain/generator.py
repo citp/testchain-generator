@@ -1,10 +1,10 @@
 from typing import List, Callable, Dict
 
 from logging import Logger
-import bitcoin.rpc
-from bitcoin.core import CMutableTxIn, CMutableTxOut, CMutableTransaction, COutPoint, CTxInWitness, CTxWitness, b2lx
-from bitcoin.core.script import CScript, CScriptWitness, OP_CHECKSIG, SignatureHash, SIGHASH_ALL, SIGVERSION_WITNESS_V0
-from bitcoin.wallet import CBitcoinSecret
+import bitcointx.rpc
+from bitcointx.core import CMutableTxIn, CMutableTxOut, CMutableTransaction, COutPoint, CTxInWitness, CTxWitness, b2lx
+from bitcointx.core.script import CScript, CScriptWitness, OP_CHECKSIG, SignatureHash, SIGHASH_ALL, SIGVERSION_WITNESS_V0
+from bitcointx.wallet import CBitcoinSecret
 
 from testchain.address import Address, UnsupportedAddressTypeError, COINBASE_KEY, COINBASE_ADDRESS, UNSPENDABLE_ADDRESS
 from testchain.util import Coin
@@ -20,7 +20,7 @@ class Generator(object):
     def run(self):
         raise NotImplementedError
 
-    def __init__(self, proxy: bitcoin.rpc.Proxy, chain, log: Logger, stored_hashes: Dict, offset: int,
+    def __init__(self, proxy: bitcointx.rpc.Proxy, chain, log: Logger, stored_hashes: Dict, offset: int,
                  next_timestamp: Callable[[], int]):
         self.proxy = proxy
         self.chain = chain
