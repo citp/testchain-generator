@@ -65,8 +65,8 @@ class Runner(object):
         # kill process when generator is done
         atexit.register(self._terminate)
 
-        self.log.info("Waiting 5 seconds for bitcoind to start")
-        sleep(5)
+        self.log.info("Waiting 10 seconds for bitcoind to start")
+        sleep(10)
 
     def _conf_file(self):
         return "{}/bitcoin.conf".format(self.tempdir.name)

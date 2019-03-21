@@ -1,5 +1,6 @@
 import random
 from testchain.runner import Generator
+from testchain.util import Coin
 
 
 class Change(Generator):
@@ -151,8 +152,15 @@ class Change(Generator):
             self.fund_address(s, 1 + self.fee)
 
         destinations = [self.next_address() for _ in range(3)]
-        txid = self.create_transaction(sources, destinations, values=[1.488888, 1.511112])
+
+        v0 = 1.488888
+        v1 = 1.511112
+        txid = self.create_transaction(sources, destinations, values=[v0, v1])
+
+        self.log_value("change-negative-testcase-value-0", Coin(v0).satoshi())
+        self.log_value("change-negative-testcase-value-1", Coin(v1).satoshi())
         self.log_value("change-negative-testcase-tx", txid)
+
         self.generate_block()
 
     def run(self):

@@ -10,7 +10,7 @@ It was written to provide a lean blockchain to run functional and regression aga
 - Install Bitcoin Core (`bitcoind`)
     - Mac: `brew install bitcoin`
     - Linux: [Install instructions](https://bitcoin.org/en/full-node#linux-instructions) (only install the daemon)
-- Install [secp256k1](https://github.com/bitcoin-core/secp256k1) (should already be installed when using BlockSci)
+- Install [secp256k1](https://github.com/bitcoin-core/secp256k1)
 - Install Python3 requirements
     - `pip3 install -r requirements.txt`
 
