@@ -29,8 +29,9 @@ class Runner(object):
         self.kv = {}
         self.output_dir = os.path.join(output_dir, '')
         self._setup_logger()
+        self._setup_chain_params()
         self._setup_bitcoind()
-        self.proxy = bitcointx.rpc.Proxy(btc_conf_file=self._conf_file())
+        self.proxy = bitcointx.rpc.Proxy(btc_conf_file=self.conf_file)
         self.proxy.call("importprivkey", COINBASE_KEY)
 
     def _setup_logger(self):
@@ -42,12 +43,27 @@ class Runner(object):
         ch.setFormatter(formatter)
         self.log.addHandler(ch)
 
+    def _setup_chain_params(self):
+        # set up chainspecific
+        if self.chain == "ltc":
+            from testchain.util import CoreLitecoinParams, RegtestLitecoinParams
+            bitcointx.SelectAlternativeParams(CoreLitecoinParams, RegtestLitecoinParams)
+
     def _setup_bitcoind(self):
         self.tempdir = tempfile.TemporaryDirectory()
-        self.log.info("bitcoind datadir: {}".format(self.tempdir.name))
+        self.log.info("datadir: {}".format(self.tempdir.name))
+
+        if self.chain == "btc" or self.chain == "bch":
+            filename = "bitcoin.conf"
+        elif self.chain == "ltc":
+            filename = "litecoin.conf"
+        else:
+            raise ValueError("Unkown chain. Please add an entry for the config file name.")
 
         # copy conf file to temp dir
-        shutil.copy("bitcoin.conf", self.tempdir.name)
+        self.conf_file = self.tempdir.name + "/" + filename
+        self.log.info("Config file created at {}".format(self.conf_file))
+        shutil.copy("bitcoin.conf", self.conf_file)
 
         # launch bitcoind
         params = [self.exec, "-rpcport=18443", "-datadir={}".format(self.tempdir.name),
@@ -62,18 +78,15 @@ class Runner(object):
         # kill process when generator is done
         atexit.register(self._terminate)
 
-        self.log.info("Waiting 10 seconds for bitcoind to start")
+        self.log.info("Waiting 10 seconds for node to start")
         sleep(10)
-
-    def _conf_file(self):
-        return "{}/bitcoin.conf".format(self.tempdir.name)
 
     def _terminate(self):
         """
         Kills the bitcoind process
         """
         self.proc.terminate()
-        self.log.info("Waiting 5 seconds for bitcoind to quit")
+        self.log.info("Waiting 5 seconds for node to quit")
         sleep(5)
 
     def next_timestamp(self):

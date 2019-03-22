@@ -31,7 +31,7 @@ class Generator(object):
         self.stored_hashes = stored_hashes
         self.fee = 0.0001
         self._next_timestamp = next_timestamp
-        self.segwit = self.chain == "btc"
+        self.segwit = (self.chain == "btc") or (self.chain == "ltc")
 
     def log_value(self, k, v):
         self.stored_hashes[k] = v
