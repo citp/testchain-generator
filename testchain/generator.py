@@ -7,7 +7,7 @@ from bitcointx.core.script import CScript, CScriptWitness, OP_CHECKSIG, Signatur
 from bitcointx.wallet import CBitcoinSecret
 
 from testchain.address import Address, UnsupportedAddressTypeError, COINBASE_KEY, COINBASE_ADDRESS, UNSPENDABLE_ADDRESS
-from testchain.util import Coin
+from testchain.util import Coin, DisjointSet
 
 
 class NoAddressError(Exception):
@@ -21,11 +21,12 @@ class Generator(object):
         raise NotImplementedError
 
     def __init__(self, proxy: bitcointx.rpc.Proxy, chain, log: Logger, stored_hashes: Dict, offset: int,
-                 next_timestamp: Callable[[], int]):
+                 next_timestamp: Callable[[], int], cospends: DisjointSet):
         self.proxy = proxy
         self.chain = chain
         self.log = log
         self.addresses = []
+        self.cospends = cospends
         self.offset = offset
         self.address_cursor = -1
         self.stored_hashes = stored_hashes
@@ -120,6 +121,9 @@ class Generator(object):
         return self._send_transaction(tx, recipients)
 
     def _create_transaction(self, sources: List[Address], recipients: List[Address], values, n_locktime, n_sequence):
+        # save cospends
+        self.cospends.union_all([str(x.address) for x in sources])
+
         if not values:
             values = [recipient.value for recipient in recipients]
         tx_ins = [CMutableTxIn(COutPoint(source.txid, source.vout), nSequence=n_sequence) for source in sources]

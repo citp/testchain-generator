@@ -110,3 +110,53 @@ class RegtestLitecoinParams(CoreLitecoinParams):
                        'EXTENDED_PRIVKEY': b'\x04\x35\x83\x94'}
     BECH32_HRP = 'rltc'
     BASE58_PREFIX_ALIAS = {5: 50}
+
+
+class DisjointSet(object):
+
+    def __init__(self):
+        self.ds = []
+
+    def __getitem__(self, item):
+        return self.ds[item]
+
+    def __iter__(self):
+        return self.ds
+
+    def all(self):
+        return self.ds
+
+    def index(self, item):
+        for idx, s in enumerate(self.ds):
+            if item in s:
+                return idx
+        return None
+
+    def get(self, item):
+        idx = self.index(item)
+        if idx is not None:
+            return self.ds[idx]
+        return None
+
+    def __add(self, item):
+        """
+        Add an item to the disjoint set if it's not already stored in it
+        :param item: The item to be stored
+        :return: The index of the set that contains the item
+        """
+        idx = self.index(item)
+        if idx is None:
+            idx = len(self.ds)
+            self.ds.append({item})
+        return idx
+
+    def union(self, item1, item2):
+        idx1 = self.__add(item1)
+        idx2 = self.__add(item2)
+        if idx1 != idx2:
+            self.ds[idx1] = self.ds[idx1] | self.ds[idx2]
+            del self.ds[idx2]
+
+    def union_all(self, items):
+        for idx in range(len(items))[1:]:
+            self.union(items[idx - 1], items[idx])

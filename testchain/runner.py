@@ -12,6 +12,7 @@ import bitcointx
 import bitcointx.rpc
 from testchain.generator import Generator
 from testchain.address import COINBASE_KEY
+from testchain.util import DisjointSet
 
 LOG_LEVEL = logging.INFO
 bitcointx.SelectParams('regtest')
@@ -27,6 +28,7 @@ class Runner(object):
         self.prev_block = None
         self.motif_generators = []
         self.kv = {}
+        self.cospends = DisjointSet()
         self.output_dir = os.path.join(output_dir, '')
         self._setup_logger()
         self._setup_chain_params()
@@ -142,6 +144,12 @@ class Runner(object):
         else:
             shutil.copy(source, blk_destination)
 
+    def prepare_output_dir(self):
+        dest_dir = self.output_dir + self.chain + "/"
+        if not os.path.exists(dest_dir):
+            os.mkdir(dest_dir)
+        return dest_dir
+
     def persist_hashes(self):
         """
         Dumps hashes into JSON file.
@@ -152,15 +160,21 @@ class Runner(object):
 
         self.log.info("Writing hashes to file output.json")
         self.log.debug(self.kv)
-        dest_dir = self.output_dir + self.chain + "/"
-        if not os.path.exists(dest_dir):
-            os.mkdir(dest_dir)
+        dest_dir = self.prepare_output_dir()
         with open(dest_dir + "output.json", "w") as f:
             json.dump(self.kv, f, indent=4)
 
+    def persist_cospends(self):
+        self.log.info("Writing cospent addresse to file cospends.txt")
+        dest_dir = self.prepare_output_dir()
+        with open(dest_dir + "cospends.txt", "w") as f:
+            for s in self.cospends.all():
+                f.write(",".join(s))
+                f.write("\n")
+
     def add_generator(self, generator: Type[Generator]):
         gen = generator(self.proxy, self.chain, self.log, self.kv, (len(self.motif_generators) + 1) * 10000,
-                        self.next_timestamp)
+                        self.next_timestamp, self.cospends)
         self.log.debug("Magic No: {}".format(gen.offset))
         self.motif_generators.append(gen)
 
@@ -170,3 +184,4 @@ class Runner(object):
         self._address_sanity_check()
         self.copy_blk_file()
         self.persist_hashes()
+        self.persist_cospends()
