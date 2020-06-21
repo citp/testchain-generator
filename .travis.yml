@@ -9,15 +9,23 @@ cache:
 
 before_install:
   - git clone https://github.com/bitcoin-core/secp256k1.git
-  - sudo apt-add-repository ppa:bitcoin/bitcoin -y
   - sudo apt-get update
   - mkdir bin
+  - wget https://bitcoincore.org/bin/bitcoin-core-0.20.0/bitcoin-0.20.0-x86_64-linux-gnu.tar.gz
+  - echo "35ec10f87b6bc1e44fd9cd1157e5dfa483eaf14d7d9a9c274774539e7824c427  bitcoin-0.20.0-x86_64-linux-gnu.tar.gz" | sha256sum --check
+  - tar -xzvf bitcoin-0.20.0-x86_64-linux-gnu.tar.gz
+  - mv ./bitcoin-0.20.0/bin/bitcoind ./bin/bitcoind
   - wget https://download.bitcoinabc.org/0.18.5/linux/bitcoin-abc-0.18.5-x86_64-linux-gnu.tar.gz
+  - echo "11439fcdae421ae96d2a7ddc3d43c9c284af44716cb5f363c61e53885a5a8811  bitcoin-abc-0.18.5-x86_64-linux-gnu.tar.gz" | sha256sum --check
   - tar -xzvf bitcoin-abc-0.18.5-x86_64-linux-gnu.tar.gz
   - mv ./bitcoin-abc-0.18.5/bin/bitcoind ./bin/bitcoin-cash
+  - wget https://download.litecoin.org/litecoin-0.18.1/linux/litecoin-0.18.1-x86_64-linux-gnu.tar.gz
+  - echo "ca50936299e2c5a66b954c266dcaaeef9e91b2f5307069b9894048acf3eb5751  litecoin-0.18.1-x86_64-linux-gnu.tar.gz" | sha256sum --check
+  - tar -xzvf litecoin-0.18.1-x86_64-linux-gnu.tar.gz
+  - mv ./litecoin-0.18.1/bin/litecoind ./bin/litecoind
 
 install:
-  - sudo apt-get install build-essential automake pkg-config libtool libgmp-dev bitcoind -y
+  - sudo apt-get install build-essential automake pkg-config libtool libgmp-dev -y
   - pip install -r requirements.txt
   - cd secp256k1
   - ./autogen.sh
@@ -29,7 +37,8 @@ install:
   - export LD_LIBRARY_PATH
 
 script:
-  - python generate_chain.py --output-dir=.output --chain=btc
+  - python generate_chain.py --output-dir=.output --chain=btc --exec=./bin/bitcoind
   - python generate_chain.py --output-dir=.output --chain=bch --exec=./bin/bitcoin-cash
+  - python generate_chain.py --output-dir=.output --chain=ltc --exec=./bin/litecoind
   - cd tests && pytest
 
