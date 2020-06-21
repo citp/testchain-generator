@@ -52,7 +52,7 @@ class Runner(object):
             bitcointx.SelectAlternativeParams(CoreLitecoinParams, RegtestLitecoinParams)
 
     def _setup_bitcoind(self):
-        self.tempdir = tempfile.TemporaryDirectory()
+        self.tempdir = tempfile.TemporaryDirectory(prefix="testchain-generator-")
         self.log.info("datadir: {}".format(self.tempdir.name))
 
         if self.chain == "btc" or self.chain == "bch":
@@ -80,16 +80,31 @@ class Runner(object):
         # kill process when generator is done
         atexit.register(self._terminate)
 
-        self.log.info("Waiting 10 seconds for node to start")
-        sleep(10)
+        # Call a common RPC i.e. `getblockcount` to check if node is started
+        self.log.info("Waiting up to 10 seconds for node to start")
+        for _ in range(10):
+            tmp_proxy = bitcointx.rpc.Proxy(btc_conf_file=self.conf_file)
+            try:
+                tmp_proxy.getblockcount()
+                break
+            except (ConnectionRefusedError, bitcointx.rpc.InWarmupError):
+                sleep(1)
+                # ... and try again
+            finally:
+                tmp_proxy.close()
 
     def _terminate(self):
         """
         Kills the bitcoind process
         """
+        self.proxy.close() # Close connection so the node don't have to wait
         self.proc.terminate()
-        self.log.info("Waiting 5 seconds for node to quit")
-        sleep(5)
+        self.log.info("Waiting up to 10 seconds for node to quit...")
+        try:
+            self.proc.wait(10)
+        except subprocess.TimeoutExpired:
+            self.log.info("Could not terminate node, killing...")
+            self.proc.kill()
 
     def next_timestamp(self):
         self.current_time += 600
